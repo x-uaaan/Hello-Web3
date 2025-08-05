@@ -1,0 +1,54 @@
+1. Project Nature
+This is a static Web3 educational website, similar in structure to roadmap.sh and Wikipedia.
+Purpose: To introduce Web3 concepts (e.g. decentralisation, chains, wallets, industries) to beginners in an engaging and editable format.
+
+2. AI Prompt Behaviour
+Always interpret prompts within the context of this specific project.
+Do not suggest backend-heavy, dynamic server-based solutions unless explicitly asked.
+Focus on static site generation, on-chain-friendly models, and Web3-aligned design decisions.
+All user interactions (edits, undos, submissions) must respect decentralised and audit-friendly principles.
+
+3. Editing & Content Contribution
+Users are allowed to edit content, similar to Wikipedia.
+Use soft editing/deleting:
+    No content is ever permanently removed.
+    All actions (edit, delete, undo) are recorded immutably (on-chain or in a cryptographic log).
+Edits should be signed with the user’s wallet address.
+
+4. Admin & Governance
+The system may have admins, but:
+Admins have limited power (e.g. moderation, structure adjustment).
+Prefer DAO-style governance or multisig control over content approval or site structure changes.
+Admins must not override users silently — all admin actions are public and recorded.
+
+5. Undo / Restore Logic
+Users who deleted or edited content may undo their own actions.
+Undo does not erase history — it simply reverses the visibility state.
+Every change must be:
+    Versioned
+    Attributable (by wallet address)
+    Publicly auditable
+
+6. On-Chain Strategy
+The system is Web3-aligned, not fully on-chain.
+Core content may be hosted statically, while:
+    Edits and history are logged on-chain or via verifiable commit hash structures. 
+Always prioritise transparency and immutability over centralised control.
+
+7. Content Integrity
+Once published, content cannot be silently changed.
+Each update must:
+    Public → Everyone can see what was changed and when.
+    Signed → Your wallet address is recorded as the author of the change.
+    Tracked → The system keeps a history of edits (like version control).
+    Immutable → Old versions aren’t deleted; they’re archived and traceable.
+
+8. UI Design 
+Minimalist Approach
+    Clean layouts with purposeful whitespace optimization create breathing room and focus attention on essential elements.
+Contemporary Typography
+    Elegant serif fonts paired with strategic sizing create readable, sophisticated text hierarchies.
+Accessible Color Contrast
+    Maintain 4.5:1 contrast ratios for normal text and 3:1 for large text to ensure readability for all users.
+Consistent Patterns
+    Apply uniform spacing, border radius, and component styling across all interface elements.
