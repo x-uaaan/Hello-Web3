@@ -12,8 +12,7 @@ const treeData = {
     { label: 'Technology' },
     { label: 'Hackathon' },
     { label: 'Career' },
-    { label: 'Malaysia' },
-    { label: 'Internasional' },
+    { label: 'Development - Malaysia / Internasional' },
   ],
 };
 
