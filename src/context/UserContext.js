@@ -33,6 +33,14 @@ export const UserProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
+  const updateUser = (partial) => {
+    setUser((prev) => {
+      const next = { ...(prev || {}), ...partial };
+      localStorage.setItem('user', JSON.stringify(next));
+      return next;
+    });
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
@@ -41,6 +49,7 @@ export const UserProvider = ({ children }) => {
   const value = {
     user,
     login,
+    updateUser,
     logout,
     loading,
     isLoggedIn: !!user

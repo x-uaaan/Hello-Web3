@@ -1,7 +1,8 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import ZkLoginService from '../services/zkLoginService';
+import { ConnectButton, useWallet } from '@suiet/wallet-kit';
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -11,6 +12,7 @@ const LoginPage = () => {
   const [currentStep, setCurrentStep] = useState('');
   const navigate = useNavigate();
   const { login } = useUser();
+  const wallet = useWallet();
   
   const zkLoginService = new ZkLoginService();
 
@@ -53,30 +55,92 @@ const LoginPage = () => {
     }
   };
 
+  // Single-button flow now, no explicit check used.
+
   const handleWalletLogin = async () => {
-    setLoading(true);
     setError('');
-    
+    if (!wallet?.connected || !wallet?.account?.address) {
+      setError('Please connect your Sui wallet first.');
+      return;
+    }
     try {
-      // Simulate wallet connection
-      setTimeout(() => {
+      setLoading(true);
+      setCurrentStep('connecting_wallet');
+
+      const address = wallet.account.address;
+
+      const userData = {
+        id: `wallet_${address}`,
+        name: 'Wallet User',
+        email: null,
+        avatar: null,
+        loginMethod: 'wallet',
+        walletAddress: address,
+      };
+
+      login(userData);
+      navigate('/');
+    } catch (err) {
+      setError('Wallet login failed: ' + (err?.message || String(err)));
+    } finally {
+      setLoading(false);
+      setCurrentStep('');
+    }
+  };
+
+  const filterWalletModal = () => {
+    try {
+      const allowed = ['suiet', 'slush'];
+      const observer = new MutationObserver(() => {
+        const modal = document.querySelector('[role="dialog"], .sui-kit-modal, .wallet-kit-modal, .sui-wallet-modal');
+        if (!modal) return;
+        const items = modal.querySelectorAll('*');
+        items.forEach((el) => {
+          const text = (el.textContent || '').toLowerCase();
+          if (text.includes('wallet') && (el.tagName === 'BUTTON' || el.closest('button'))) {
+            const btn = el.tagName === 'BUTTON' ? el : el.closest('button');
+            if (btn && !allowed.some((w) => text.includes(w))) {
+              btn.style.display = 'none';
+            }
+          }
+        });
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      // Auto stop after a short while to avoid permanent observers
+      setTimeout(() => observer.disconnect(), 5000);
+    } catch (_) {
+      // ignore
+    }
+  };
+
+  // Auto-complete login once wallet is connected
+  useEffect(() => {
+    if (selectedMethod !== 'wallet') return;
+    if (!wallet?.connected || !wallet?.account?.address) return;
+    if (loading) return;
+
+    (async () => {
+      try {
+        setLoading(true);
+        const address = wallet.account.address;
         const userData = {
-          id: 'wallet_' + Math.random().toString(36).substr(2, 9),
+          id: `wallet_${address}`,
           name: 'Wallet User',
           email: null,
           avatar: null,
           loginMethod: 'wallet',
-          walletAddress: '0x' + Math.random().toString(16).substr(2, 40)
+          walletAddress: address,
         };
-        
         login(userData);
         navigate('/');
-      }, 2000);
-    } catch (err) {
-      setError('Wallet connection failed: ' + err.message);
-      setLoading(false);
-    }
-  };
+      } catch (err) {
+        setError('Wallet login failed: ' + (err?.message || String(err)));
+      } finally {
+        setLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMethod, wallet?.connected, wallet?.account?.address]);
 
   const handleMethodSelect = (method) => {
     setSelectedMethod(method);
@@ -140,12 +204,12 @@ const LoginPage = () => {
             </div>
             <div className="method-content">
               <h3>Connect Wallet</h3>
-              <p>Connect your Web3 wallet</p>
+              <p>Connect your Sui wallet with Suiet Wallet Kit</p>
             </div>
           </div>
         </div>
 
-        {selectedMethod && (
+        {selectedMethod === 'google' && (
           <div className="login-actions">
             <button 
               className="login-button"
@@ -158,9 +222,17 @@ const LoginPage = () => {
                   {getStepDescription()}
                 </div>
               ) : (
-                `Continue with ${selectedMethod === 'google' ? 'Google' : 'Wallet'}`
+                'Continue with Google'
               )}
             </button>
+          </div>
+        )}
+
+        {selectedMethod === 'wallet' && (
+          <div className="login-wallet-flow">
+            <div className="login-actions">
+              <ConnectButton className="login-button" onClick={filterWalletModal}>Continue with Wallet</ConnectButton>
+            </div>
           </div>
         )}
 

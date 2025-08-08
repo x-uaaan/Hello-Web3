@@ -3,8 +3,11 @@ import { useUser } from '../context/UserContext';
 import './Profile.css';
 
 const Profile = () => {
-  const { user, isLoggedIn } = useUser();
+  const { user, isLoggedIn, updateUser } = useUser();
   const [isVisible, setIsVisible] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
 
   // Debug avatar status when profile loads
   useEffect(() => {
@@ -52,6 +55,28 @@ const Profile = () => {
     });
   };
 
+  const startEdit = () => {
+    setIsEditing(true);
+    setEditName(user.name || '');
+    setEditEmail(user.email || '');
+  };
+
+  const cancelEdit = () => {
+    setIsEditing(false);
+  };
+
+  const saveEdit = () => {
+    const trimmedName = (editName || '').trim();
+    const trimmedEmail = (editEmail || '').trim();
+
+    // Preserve wallet address fields; only update name/email
+    updateUser({
+      name: trimmedName || user.name,
+      email: trimmedEmail || user.email,
+    });
+    setIsEditing(false);
+  };
+
 
 
   return (
@@ -85,8 +110,33 @@ const Profile = () => {
           </div>
 
           <div className="profile-info">
-            <h1 className="profile-name">{user.name}</h1>
-            <p className="profile-email">{user.email}</p>
+            {isEditing ? (
+              <>
+                <input
+                  className="edit-input"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Your name"
+                />
+                <input
+                  className="edit-input"
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="you@example.com"
+                />
+                <div className="edit-actions">
+                  <button className="save-btn" onClick={saveEdit}>Save</button>
+                  <button className="cancel-btn" onClick={cancelEdit}>Cancel</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h1 className="profile-name">{user.name}</h1>
+                <p className="profile-email">{user.email}</p>
+                <button className="edit-btn" onClick={startEdit}>Edit</button>
+              </>
+            )}
           </div>
         </div>
         
