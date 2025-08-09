@@ -29,7 +29,7 @@ const Profile = () => {
   const maskAddress = (data) => {
     if (!data) return 'Not available';
     if (isVisible) return data;
-    return '••••••••••••••••••••••••••••••••••••••••••••';
+    return '********************************************';
   };
 
   if (!isLoggedIn || !user) {
@@ -66,10 +66,10 @@ const Profile = () => {
                 alt={user.name}
                 className="profile-avatar"
                 onLoad={() => {
-                  console.log('✅ Profile avatar loaded successfully');
+                  console.log('Profile avatar loaded successfully');
                 }}
                 onError={(e) => {
-                  console.warn('❌ Profile avatar failed to load:', user.avatar);
+                  console.warn('Profile avatar failed to load:', user.avatar);
                   e.target.style.display = 'none';
                   e.target.nextElementSibling.style.display = 'flex';
                 }}

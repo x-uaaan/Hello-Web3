@@ -1,0 +1,12 @@
+[package]
+name = "contract"
+version = "0.0.1"
+
+## Tip: Omit explicit Sui deps and let Sui CLI auto-add the correct framework version
+## If you need to pin a specific tag, re-add the block below with a concrete testnet rev:
+## [dependencies]
+## Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "testnet-v1.XX.X" }
+
+[addresses]
+# Named address for this package; updated to your package ID after publish for upgrades
+contract = "0x0"

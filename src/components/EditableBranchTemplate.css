@@ -78,6 +78,30 @@
   font-size: 0.9rem;
 }
 
+/* Section title row with optional delete button */
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.delete-section-button {
+  background: #fff5f5;
+  color: #e53e3e;
+  border: 1px solid #fed7d7;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.delete-section-button:hover {
+  background: #feb2b2;
+  color: white;
+  border-color: #fc8181;
+}
+
 /* Edit Controls - Now integrated into sidebar header */
 
 .edit-button {
@@ -202,13 +226,20 @@
   background: white;
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  padding: 0.5rem;
+  padding: 0.75rem;
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
   z-index: 1000;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(0, 0, 0, 0.1);
   animation: toolbarFadeIn 0.2s ease-out;
+}
+
+.toolbar-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 @keyframes toolbarFadeIn {
@@ -256,13 +287,85 @@
   font-weight: 700;
 }
 
+/* Ensure vertical dividers are visible */
+.toolbar-divider {
+  height: 24px;
+  align-self: center;
+  background-color: #e9ecef;
+}
+
 /* Content Item Spacing */
 .content-item {
   margin-bottom: 1.5rem;
+  position: relative;
 }
 
 .content-item:last-child {
   margin-bottom: 0;
+}
+
+/* Delete button positioned bottom-right of content block */
+.delete-item-button {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #e9ecef;
+  background: #fff;
+  color: #e53e3e;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.delete-item-button:hover {
+  background: #e53e3e;
+  color: #fff;
+  border-color: #e53e3e;
+}
+
+/* Minimal custom modal styling */
+.custom-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.custom-modal {
+  background: #fff;
+  color: #1a202c;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+.custom-modal-header {
+  font-weight: 600;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.custom-modal-body {
+  padding: 1rem 1.25rem;
+}
+
+.custom-modal-footer {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding: 0.75rem 1.25rem 1.25rem;
 }
 
 /* Responsive Design */
