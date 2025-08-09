@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {Divider} from '@heroui/react';
 import './EditableBranchTemplate.css';
 import { useWallet } from '@suiet/wallet-kit';
@@ -6,11 +6,31 @@ import { Transaction } from '@mysten/sui/transactions';
 import { PACKAGE_ID, MODULE_NAME, FUNCTION_NAME } from '../services/suiConfig';
 import { sha256 } from 'js-sha256';
 
-const EditableBranchTemplate = ({ title, sections, onSave, editorAddress = "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6" }) => {
+const EditableBranchTemplate = ({ title, sections, onSave, editorAddress}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(sections);
   const [selectedElement, setSelectedElement] = useState(null);
   const [selectedPosition, setSelectedPosition] = useState({ sectionIndex: null, contentIndex: null });
+  const [lastEditedAtMs, setLastEditedAtMs] = useState(null);
+  const [lastEditedBy, setLastEditedBy] = useState(editorAddress || 'unknown');
+
+  // Load last edited metadata from localStorage once per title
+  useEffect(() => {
+    try {
+      const key = `lastEdited:${title}`;
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed.atMs === 'number' && typeof parsed.by === 'string') {
+          setLastEditedAtMs(parsed.atMs);
+          setLastEditedBy(parsed.by);
+        }
+      }
+    } catch (_) {
+      // ignore storage errors
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title]);
 
   const toolbarRef = useRef(null);
   const wallet = useWallet();
@@ -159,6 +179,17 @@ const EditableBranchTemplate = ({ title, sections, onSave, editorAddress = "0x74
         return null;
       }
 
+      // Validate on-chain config before building the transaction
+      const invalidPkg = !PACKAGE_ID || PACKAGE_ID.includes('YOUR_PACKAGE_ID') || PACKAGE_ID.length < 3 || !PACKAGE_ID.startsWith('0x');
+      const invalidModule = !MODULE_NAME || MODULE_NAME.trim().length === 0;
+      const invalidFn = !FUNCTION_NAME || FUNCTION_NAME.trim().length === 0;
+      if (invalidPkg || invalidModule || invalidFn) {
+        const errMsg = `On-chain config invalid. Please set REACT_APP_SUI_PACKAGE_ID, REACT_APP_SUI_MODULE_NAME, REACT_APP_SUI_FUNCTION_NAME. Current PACKAGE_ID=${PACKAGE_ID}`;
+        console.error(errMsg);
+        alert(errMsg);
+        return null;
+      }
+
       const tx = new Transaction();
       const target = `${PACKAGE_ID}::${MODULE_NAME}::${FUNCTION_NAME}`;
       const nowMs = Date.now();
@@ -202,7 +233,34 @@ const EditableBranchTemplate = ({ title, sections, onSave, editorAddress = "0x74
     }
     // Fire-and-forget the on-chain record; do not block UI
     // Await here so errors can be surfaced in console, but not gated for state updates
-    await recordEditOnChain(title, sanitized);
+    const txResult = await recordEditOnChain(title, sanitized);
+    if (txResult) {
+      // Prefer zkLogin session address when available
+      let zkLoginAddress = null;
+      try {
+        zkLoginAddress = sessionStorage.getItem('zkLoginAddress');
+      } catch (_) {}
+
+      const walletAddress = (wallet && (wallet.account?.address || wallet.address)) || null;
+      const effectiveEditor = zkLoginAddress || walletAddress || editorAddress || 'unknown';
+
+      const now = Date.now();
+      setLastEditedAtMs(now);
+      setLastEditedBy(effectiveEditor);
+
+      // Persist to localStorage so it survives refresh
+      try {
+        const key = `lastEdited:${title}`;
+        localStorage.setItem(key, JSON.stringify({ atMs: now, by: effectiveEditor }));
+      } catch (_) {
+        // ignore storage errors
+      }
+
+      // If zkLogin address differs from connected wallet, inform user of sender mismatch
+      if (zkLoginAddress && walletAddress && zkLoginAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+        console.warn('Transaction was paid by connected wallet; profile shows zkLogin address. To have zkLogin pay gas, enable zkLogin signing.');
+      }
+    }
     setContent(sanitized);
     setIsEditing(false);
   };
@@ -408,7 +466,11 @@ const EditableBranchTemplate = ({ title, sections, onSave, editorAddress = "0x74
 
           {/* Last Edited Timestamp */}
           <div className="last-edited">
-            This page was last edited on {new Date().toLocaleDateString()}, at {new Date().toLocaleTimeString()} (UTC) by {editorAddress}.
+            {lastEditedAtMs && lastEditedBy ? (
+              <>This page was last edited on {new Date(lastEditedAtMs).toLocaleDateString()}, at {new Date(lastEditedAtMs).toLocaleTimeString()} by {lastEditedBy}.</>
+            ) : (
+              <>No on-chain edits yet.</>
+            )}
           </div>
         </div>
       </div>
@@ -517,7 +579,19 @@ const EditableBranchTemplate = ({ title, sections, onSave, editorAddress = "0x74
             </div>
             <div className="custom-modal-footer">
               <button className="toolbar-button" onClick={() => setIsSaveOpen(false)}>No</button>
-              <button className="toolbar-button save-button" onClick={() => { setIsSaveOpen(false); setIsEditing(false); }}>Yes</button>
+              <button
+                className="toolbar-button save-button"
+                onClick={async () => {
+                  setIsSaveOpen(false);
+                  if (!wallet?.connected) {
+                    alert('Please connect your wallet to proceed.');
+                    return;
+                  }
+                  await handleSave();
+                }}
+              >
+                Yes
+              </button>
             </div>
           </div>
         </div>
